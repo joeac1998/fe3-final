@@ -1,20 +1,50 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
+import {Link} from "react-router-dom"
+import axios from "axios"
 
 
-const Card = ({ name, username, id }) => {
+const Card = ({ id }) => {
+  const [dentistData, setDentistData] = useState(null);
 
-  const addFav = ()=>{
-    // Aqui iria la logica para agregar la Card en el localStorage
-  }
+  const addFav = () => {
+    const favsFromStorage = JSON.parse(localStorage.getItem("favorites")) || [];
+  
+    const isAlreadyFav = favsFromStorage.some((fav) => fav.id === id);
+  
+    if (!isAlreadyFav) {
+      const updatedFavs = [...favsFromStorage, { id }];
+      localStorage.setItem("favorites", JSON.stringify(updatedFavs));
+    } else {
+      console.log("Esta tarjeta ya está en favoritos");
+    }
+  };
+
+  useEffect(() => {
+    axios
+      .get(`https://jsonplaceholder.typicode.com/users/${id}`)
+      .then((response) => {
+        setDentistData(response.data);
+      })
+      .catch((error) => {
+        console.error("Error al obtener los datos del dentista:", error);
+      });
+  }, [id]);
 
   return (
     <div className="card">
-        {/* En cada card deberan mostrar en name - username y el id */}
-
-        {/* No debes olvidar que la Card a su vez servira como Link hacia la pagina de detalle */}
-
-        {/* Ademas deberan integrar la logica para guardar cada Card en el localStorage */}
-        <button onClick={addFav} className="favButton">Add fav</button>
+      {dentistData ? (
+        <>
+          <h3>{dentistData.name}</h3>
+          <p>Username: {dentistData.username}</p>
+          <p>ID: {dentistData.id}</p>
+          <Link to={`/dentist/${id}`}>Ver detalle</Link>
+          <button onClick={addFav} className="favButton">
+            Add fav
+          </button>
+        </>
+      ) : (
+        <p>Cargando datos del dentista...</p>
+      )}
     </div>
   );
 };
